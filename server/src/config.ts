@@ -14,7 +14,8 @@ export const config = {
   isProd: process.env.NODE_ENV === 'production',
   isTest: process.env.NODE_ENV === 'test',
   port: int('PORT', 4000),
-  appUrl: (process.env.APP_URL ?? 'http://localhost:5173').replace(/\/$/, ''),
+  // Render, servisin genel adresini RENDER_EXTERNAL_URL olarak otomatik verir.
+  appUrl: (process.env.APP_URL || process.env.RENDER_EXTERNAL_URL || 'http://localhost:5173').replace(/\/$/, ''),
   sessionTtlDays: int('SESSION_TTL_DAYS', 30),
   uploadDir: path.resolve(serverRoot, process.env.UPLOAD_DIR ?? 'uploads'),
   clientDist: path.resolve(serverRoot, '..', 'client', 'dist'),

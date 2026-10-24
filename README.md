@@ -220,6 +220,18 @@ Her kart olayı sahada yaşanan **tek** bir disiplin kararıdır:
 
 Uygulama tek bir Node süreci olarak çalışır: API ve derlenmiş arayüz aynı adresten sunulur (CORS gerekmez). Gereken: **HTTPS** (production çerezleri `Secure`'dur), PostgreSQL ve kalıcı bir yükleme klasörü.
 
+### Ücretsiz kurulum — Render + Neon (önerilen)
+
+Repodaki `render.yaml` Render servisini otomatik tanımlar.
+
+1. **neon.tech** → GitHub ile giriş → yeni proje (bölge: Frankfurt). *Connection string* ekranında **pooled bağlantıyı kapatıp** doğrudan (direct) adresi kopyalayın (`...?sslmode=require`). Migration'lar doğrudan bağlantı ister.
+2. **render.com** → GitHub ile giriş → **New → Blueprint** → bu repoyu seçin.
+3. Render `DATABASE_URL` değerini sorar → Neon adresini yapıştırın → **Apply**.
+4. İlk derleme birkaç dakika sürer. Açılışta migration'lar ve sistem kategorileri otomatik uygulanır. Adres: `https://refstats-xxxx.onrender.com`.
+5. Yönetici: siteye kayıt olun, sonra kendi bilgisayarınızda `server/.env` içindeki `DATABASE_URL`'i geçici olarak Neon adresiyle değiştirip `npm run create-admin -- <e-posta>` çalıştırın ve eski değere geri alın.
+
+Ücretsiz plan notları: servis 15 dk istek gelmezse uyur, ilk istek ~30–60 sn sürebilir; kalıcı disk olmadığı için profil fotoğrafları yeni dağıtımda silinir (maç verileri Neon'da kalıcıdır). Her `git push` otomatik yeniden dağıtım yapar.
+
 ### Seçenek 1 — Docker
 
 ```bash

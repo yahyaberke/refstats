@@ -1,0 +1,17 @@
+# Render Blueprint — Render panelinde "New → Blueprint" ile bu repo seçildiğinde servis otomatik kurulur.
+# Veritabanı Neon (ücretsiz, kalıcı PostgreSQL) üzerinde tutulur; bağlantı adresi kurulum sırasında elle girilir.
+services:
+  - type: web
+    name: refstats
+    runtime: docker
+    plan: free
+    region: frankfurt
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        sync: false # Neon bağlantı adresi (doğrudan/"direct" bağlantı, sslmode=require ile)
+      - key: SESSION_TTL_DAYS
+        value: "30"
