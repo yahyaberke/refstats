@@ -1,6 +1,6 @@
 import { useMutation } from '@tanstack/react-query';
 import { Camera, Lock, Trash2 } from 'lucide-react';
-import { profileSchema } from '@refstats/shared';
+import { profileSchema, startYearFromLicense } from '@refstats/shared';
 import { useRef, useState, type FormEvent } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
@@ -138,11 +138,29 @@ export default function Profile() {
           error={errors.licenseNumber}
           hint={
             <span className="inline-flex items-center gap-1">
-              <Lock className="h-3 w-3" /> Özel bilgi: yalnızca siz görürsünüz; herkese açık profilde asla yayımlanmaz.
+              <Lock className="h-3 w-3" /> 5 haneli. Özel bilgi: yalnızca siz görürsünüz; herkese açık profilde asla yayımlanmaz.
             </span>
           }
         >
-          {(id, d) => <Input id={id} value={form.licenseNumber} onChange={(e) => set('licenseNumber', e.target.value)} aria-describedby={d} autoComplete="off" />}
+          {(id, d) => (
+            <Input
+              id={id}
+              inputMode="numeric"
+              maxLength={5}
+              value={form.licenseNumber}
+              onChange={(e) => {
+                const v = e.target.value.replace(/\D/g, '').slice(0, 5);
+                set('licenseNumber', v);
+                // Başlangıç yılı boşsa lisans numarasının ilk iki hanesinden doldurulur (51 → 2023).
+                const year = startYearFromLicense(v);
+                if (year && !form.startYear) set('startYear', String(year));
+              }}
+              invalid={!!errors.licenseNumber}
+              aria-describedby={d}
+              autoComplete="off"
+              className="tabular-nums tracking-widest"
+            />
+          )}
         </Field>
         <Field label="Kısa biyografi" optional error={errors.bio} hint={`${form.bio.length}/600`}>
           {(id, d) => <Textarea id={id} rows={4} maxLength={600} value={form.bio} onChange={(e) => set('bio', e.target.value)} aria-describedby={d} />}

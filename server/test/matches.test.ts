@@ -158,7 +158,7 @@ describe('kullanıcılar arası veri izolasyonu', () => {
       firstName: 'Ali',
       lastName: 'Veli',
       username: a.user.username,
-      licenseNumber: 'SICIL-12345',
+      licenseNumber: '52987',
       bio: 'Merhaba',
     });
     expect((await a.c.get(`/api/public/profiles/${a.user.username}`)).status).toBe(404);
@@ -166,7 +166,7 @@ describe('kullanıcılar arası veri izolasyonu', () => {
     await a.c.put('/api/profile/settings', { ...settings, profilePublic: true });
     const pub = await a.c.get(`/api/public/profiles/${a.user.username}`);
     expect(pub.status).toBe(200);
-    expect(JSON.stringify(pub.body)).not.toContain('SICIL-12345');
+    expect(JSON.stringify(pub.body)).not.toContain('52987');
     expect(JSON.stringify(pub.body)).not.toContain('@test.local');
   });
 });

@@ -111,6 +111,7 @@ async function main() {
       organization: 'İstanbul Amatör Futbol (örnek)',
       classification: 'İl Hakemi',
       startYear: 2019,
+      licenseNumber: '47123',
       bio: 'Bu bir demo hesabıdır. Tüm maçlar ve isimler örnek amaçlı üretilmiştir.',
       settings: { create: { profilePublic: true } },
     },

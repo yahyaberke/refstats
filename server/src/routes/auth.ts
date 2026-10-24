@@ -6,6 +6,7 @@ import {
   loginSchema,
   registerSchema,
   resetPasswordSchema,
+  startYearFromLicense,
 } from '@refstats/shared';
 import { config } from '../config';
 import { prisma } from '../db';
@@ -54,6 +55,8 @@ authRouter.post(
         username: input.username,
         firstName: input.firstName,
         lastName: input.lastName,
+        licenseNumber: input.licenseNumber,
+        startYear: startYearFromLicense(input.licenseNumber),
         passwordHash: await hashPassword(input.password),
         lastLoginAt: new Date(),
         settings: { create: {} },

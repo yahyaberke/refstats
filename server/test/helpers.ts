@@ -29,7 +29,7 @@ export async function registerUser(overrides: Partial<{ email: string; username:
     password: overrides.password ?? 'Parola1234',
   };
   const c = client();
-  const res = await c.post('/api/auth/register', { ...creds, firstName: 'Test', lastName: 'Hakem' });
+  const res = await c.post('/api/auth/register', { ...creds, firstName: 'Test', lastName: 'Hakem', licenseNumber: '51800' });
   if (res.status !== 201) throw new Error(`register failed ${res.status} ${JSON.stringify(res.body)}`);
   return { c, user: res.body.user as { id: string; username: string }, creds };
 }

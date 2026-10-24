@@ -15,6 +15,9 @@ describe('kimlik doğrulama', () => {
     const stored = await prisma.user.findUniqueOrThrow({ where: { email: creds.email } });
     expect(stored.passwordHash).not.toContain(creds.password);
     expect(stored.passwordHash.startsWith('$2')).toBe(true);
+    // Lisans no 51800 → ilk iki hane 51 → hakemliğe başlangıç 2023
+    expect(stored.licenseNumber).toBe('51800');
+    expect(stored.startYear).toBe(2023);
   });
 
   it('zayıf parolayı ve geçersiz e-postayı reddeder', async () => {
@@ -28,6 +31,7 @@ describe('kimlik doğrulama', () => {
     expect(res.status).toBe(400);
     expect(res.body.error.details.email).toBeDefined();
     expect(res.body.error.details.password).toBeDefined();
+    expect(res.body.error.details.licenseNumber).toBeDefined();
   });
 
   it('aynı kullanıcı adıyla ikinci kaydı engeller', async () => {
@@ -38,6 +42,7 @@ describe('kimlik doğrulama', () => {
       firstName: 'X',
       lastName: 'Y',
       username: creds.username,
+      licenseNumber: '50123',
     });
     expect(res.status).toBe(409);
   });

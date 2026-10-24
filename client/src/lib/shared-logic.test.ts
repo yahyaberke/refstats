@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { computeCardTotals, matchSchema, seasonForDate, seasonRange, summaryCardTotals } from '@refstats/shared';
+import { computeCardTotals, matchSchema, seasonForDate, seasonRange, startYearFromLicense, summaryCardTotals } from '@refstats/shared';
 import { qs } from './api';
 import { score } from './format';
 
@@ -12,6 +12,16 @@ describe('sezon hesaplama', () => {
   it('sezon aralığını döner', () => {
     expect(seasonRange('2025-2026')).toEqual({ start: '2025-07-01', end: '2026-06-30' });
     expect(seasonRange('2025-2027')).toBeNull();
+  });
+});
+
+describe('lisans numarası', () => {
+  it('ilk iki haneden başlangıç yılını bulur', () => {
+    expect(startYearFromLicense('51800')).toBe(2023);
+    expect(startYearFromLicense('50123')).toBe(2022);
+    expect(startYearFromLicense('48000')).toBe(2020);
+    expect(startYearFromLicense('5180')).toBeNull();
+    expect(startYearFromLicense('99999')).toBeNull();
   });
 });
 

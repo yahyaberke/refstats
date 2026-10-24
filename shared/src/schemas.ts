@@ -52,12 +52,26 @@ export const usernameSchema = z
 
 export const emailSchema = z.string().trim().toLowerCase().email('Geçerli bir e-posta adresi girin').max(254);
 
+/** Hakem lisans numarası: 5 hane. İlk iki hane hakemliğe başlangıç yılını gösterir (bkz. startYearFromLicense). */
+export const licenseNumberSchema = z
+  .string()
+  .trim()
+  .regex(/^\d{5}$/, 'Lisans numarası 5 haneli bir sayı olmalı');
+
+/** "51800" → 2023, "50123" → 2022. Geçersiz/makul olmayan yıl için null. */
+export function startYearFromLicense(license: string | null | undefined): number | null {
+  if (!license || !/^\d{5}$/.test(license)) return null;
+  const year = 1972 + Number(license.slice(0, 2));
+  return year >= 1950 && year <= new Date().getFullYear() ? year : null;
+}
+
 export const registerSchema = z.object({
   email: emailSchema,
   password: passwordSchema,
   firstName: trimmed(60).min(1, 'Ad zorunludur'),
   lastName: trimmed(60).min(1, 'Soyad zorunludur'),
   username: usernameSchema,
+  licenseNumber: licenseNumberSchema,
 });
 export type RegisterInput = z.infer<typeof registerSchema>;
 
@@ -85,7 +99,10 @@ export const profileSchema = z.object({
   organization: optionalText(120),
   classification: optionalText(80),
   startYear: optionalInt(1950, currentYear, 'Başlangıç yılı'),
-  licenseNumber: optionalText(40),
+  licenseNumber: z
+    .union([licenseNumberSchema, z.literal(''), z.null()])
+    .optional()
+    .transform((v) => (v ? v : null)),
   bio: optionalText(600),
 });
 export type ProfileInput = z.input<typeof profileSchema>;

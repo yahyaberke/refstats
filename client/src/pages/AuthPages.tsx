@@ -1,4 +1,4 @@
-import { forgotPasswordSchema, loginSchema, registerSchema, resetPasswordSchema } from '@refstats/shared';
+import { forgotPasswordSchema, loginSchema, registerSchema, resetPasswordSchema, startYearFromLicense } from '@refstats/shared';
 import { CheckCircle2, Eye, EyeOff, MailCheck } from 'lucide-react';
 import { useState, type FormEvent, type ReactNode } from 'react';
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
@@ -147,7 +147,8 @@ export function LoginPage() {
 export function RegisterPage() {
   const { setUser } = useAuth();
   const navigate = useNavigate();
-  const [form, setForm] = useState({ firstName: '', lastName: '', username: '', email: '', password: '' });
+  const [form, setForm] = useState({ firstName: '', lastName: '', username: '', email: '', password: '', licenseNumber: '' });
+  const licenseYear = startYearFromLicense(form.licenseNumber);
   const { errors, setErrors, clear } = useFieldErrors();
   const [formError, setFormError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -217,6 +218,30 @@ export function RegisterPage() {
         <Field label="E-posta" error={errors.email}>
           {(id, d) => (
             <Input id={id} type="email" autoComplete="email" value={form.email} onChange={(e) => set('email')(e.target.value)} invalid={!!errors.email} aria-describedby={d} />
+          )}
+        </Field>
+        <Field
+          label="Hakem lisans numarası"
+          error={errors.licenseNumber}
+          hint={
+            licenseYear
+              ? `Hakemliğe başlangıç yılın ${licenseYear} olarak kaydedilecek. Lisans numaran gizli kalır.`
+              : '5 haneli numara (ör. 51800). İlk iki hane başlangıç yılını gösterir. Herkese açık profilde asla görünmez.'
+          }
+        >
+          {(id, d) => (
+            <Input
+              id={id}
+              inputMode="numeric"
+              autoComplete="off"
+              maxLength={5}
+              placeholder="51800"
+              value={form.licenseNumber}
+              onChange={(e) => set('licenseNumber')(e.target.value.replace(/\D/g, '').slice(0, 5))}
+              invalid={!!errors.licenseNumber}
+              aria-describedby={d}
+              className="tabular-nums tracking-widest"
+            />
           )}
         </Field>
         <Field label="Parola" error={errors.password} hint="En az 8 karakter; en az bir harf ve bir rakam.">
