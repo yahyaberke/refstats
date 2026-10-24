@@ -1,0 +1,30 @@
+{
+  "name": "refstats",
+  "private": true,
+  "version": "1.0.0",
+  "description": "RefStats — hakemler için kişisel maç, istatistik ve kariyer platformu",
+  "workspaces": [
+    "shared",
+    "server",
+    "client"
+  ],
+  "scripts": {
+    "db:up": "docker compose up -d db",
+    "db:down": "docker compose down",
+    "db:migrate": "npm run migrate -w server",
+    "db:seed": "npm run seed -w server",
+    "db:demo": "npm run seed:demo -w server",
+    "create-admin": "npm run create-admin -w server --",
+    "dev": "concurrently -n server,client -c green,cyan \"npm run dev -w server\" \"npm run dev -w client\"",
+    "build": "npm run build -w client && npm run typecheck -w server",
+    "start": "npm run start -w server",
+    "typecheck": "npm run typecheck -w shared && npm run typecheck -w server && npm run typecheck -w client",
+    "test": "npm run test -w server && npm run test -w client"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.5"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

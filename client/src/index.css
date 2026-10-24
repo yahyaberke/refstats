@@ -1,0 +1,147 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    color-scheme: dark;
+  }
+  html {
+    -webkit-tap-highlight-color: transparent;
+  }
+  body {
+    @apply bg-ink-950 font-sans text-slate-200 antialiased;
+    background-image:
+      radial-gradient(1200px 600px at 85% -10%, rgba(18, 181, 113, 0.08), transparent 60%),
+      radial-gradient(900px 500px at -10% 110%, rgba(52, 71, 105, 0.25), transparent 60%);
+    background-attachment: fixed;
+    min-height: 100vh;
+  }
+  h1,
+  h2,
+  h3 {
+    @apply font-display tracking-tight text-white;
+  }
+  :focus-visible {
+    @apply outline-none ring-2 ring-pitch-400/70 ring-offset-2 ring-offset-ink-950;
+  }
+  ::selection {
+    @apply bg-pitch-500/40 text-white;
+  }
+  input[type='date']::-webkit-calendar-picker-indicator,
+  input[type='time']::-webkit-calendar-picker-indicator {
+    filter: invert(0.8);
+    cursor: pointer;
+  }
+  input[type='number']::-webkit-inner-spin-button {
+    opacity: 0.4;
+  }
+}
+
+@layer components {
+  .panel {
+    @apply rounded-2xl border border-white/[0.06] bg-ink-900/80 shadow-panel backdrop-blur-sm;
+  }
+  .panel-pad {
+    @apply p-4 sm:p-5;
+  }
+  .label {
+    @apply mb-1.5 block text-xs font-medium uppercase tracking-wide text-slate-400;
+  }
+  .input {
+    @apply block w-full rounded-xl border border-white/10 bg-ink-850 px-3 py-2.5 text-sm text-white placeholder:text-slate-500
+      transition focus:border-pitch-400/60 focus:outline-none focus:ring-2 focus:ring-pitch-400/20 disabled:opacity-50;
+  }
+  .input-error {
+    @apply border-red-400/60 focus:border-red-400 focus:ring-red-400/20;
+  }
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition
+      active:scale-[.98] disabled:pointer-events-none disabled:opacity-50;
+  }
+  .btn-primary {
+    @apply btn bg-pitch-500 text-ink-950 shadow-glow hover:bg-pitch-400;
+  }
+  .btn-secondary {
+    @apply btn border border-white/10 bg-white/[0.04] text-slate-100 hover:bg-white/[0.08];
+  }
+  .btn-ghost {
+    @apply btn text-slate-300 hover:bg-white/[0.06] hover:text-white;
+  }
+  .btn-danger {
+    @apply btn bg-red-500/90 text-white hover:bg-red-500;
+  }
+  .btn-sm {
+    @apply rounded-lg px-3 py-1.5 text-xs;
+  }
+  .chip {
+    @apply inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-xs font-medium;
+  }
+  .table-base {
+    @apply w-full text-left text-sm;
+  }
+  .table-base th {
+    @apply whitespace-nowrap border-b border-white/[0.06] px-3 py-2.5 text-xs font-medium uppercase tracking-wide text-slate-400;
+  }
+  .table-base td {
+    @apply border-b border-white/[0.04] px-3 py-3 align-middle;
+  }
+  .table-base tbody tr {
+    @apply transition-colors hover:bg-white/[0.02];
+  }
+  .card-yellow {
+    @apply inline-block h-3.5 w-2.5 rounded-[2px] bg-card-yellow shadow-[0_0_6px_rgba(250,204,21,.4)];
+  }
+  .card-red {
+    @apply inline-block h-3.5 w-2.5 rounded-[2px] bg-card-red shadow-[0_0_6px_rgba(239,68,68,.4)];
+  }
+}
+
+@layer utilities {
+  .scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.12) transparent;
+  }
+  .pb-safe {
+    padding-bottom: max(env(safe-area-inset-bottom), 0.5rem);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Yazdırma: maç dökümü ve kariyer özgeçmişi beyaz kâğıt üzerinde okunaklı çıksın. */
+@media print {
+  @page {
+    margin: 14mm;
+  }
+  body {
+    background: #fff !important;
+    color: #111 !important;
+  }
+  .no-print {
+    display: none !important;
+  }
+  .print-area,
+  .print-area * {
+    color: #111 !important;
+    border-color: #ccc !important;
+    box-shadow: none !important;
+    background: transparent !important;
+  }
+  .print-area h1,
+  .print-area h2,
+  .print-area h3 {
+    color: #000 !important;
+  }
+  main {
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+}

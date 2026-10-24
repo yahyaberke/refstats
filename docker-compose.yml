@@ -1,0 +1,22 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: refstats-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: refstats
+      POSTGRES_PASSWORD: refstats_dev_password
+      POSTGRES_DB: refstats
+    ports:
+      - "5432:5432"
+    volumes:
+      - refstats_pgdata:/var/lib/postgresql/data
+      - ./server/prisma/init-test-db.sql:/docker-entrypoint-initdb.d/init-test-db.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U refstats -d refstats"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  refstats_pgdata:

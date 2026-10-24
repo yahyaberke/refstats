@@ -1,0 +1,382 @@
+// RefStats veritabanı şeması
+// Tüm kullanıcıya ait kayıtlar userId ile izole edilir; sorgular her zaman userId filtresi içerir.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  USER
+  ADMIN
+}
+
+enum AccountStatus {
+  ACTIVE
+  SUSPENDED
+  CLOSURE_REQUESTED
+  CLOSED
+}
+
+enum OfficialRole {
+  REFEREE
+  AR1
+  AR2
+  FOURTH
+  ADDITIONAL_AR
+  OTHER
+}
+
+enum MatchType {
+  LEAGUE
+  CUP
+  FRIENDLY
+  TOURNAMENT
+  SPECIAL
+}
+
+enum MatchStatus {
+  SCHEDULED
+  COMPLETED
+  POSTPONED
+  CANCELLED
+}
+
+enum ReportStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  DONE
+}
+
+enum CardEntryMode {
+  DETAILED
+  SUMMARY
+}
+
+enum CardType {
+  YELLOW
+  SECOND_YELLOW
+  DIRECT_RED
+}
+
+enum PersonType {
+  PLAYER
+  SUBSTITUTE
+  HEAD_COACH
+  COACH
+  TECHNICAL_STAFF
+  MANAGER
+  TEAM_OFFICIAL
+  OTHER
+}
+
+enum TeamSide {
+  HOME
+  AWAY
+}
+
+enum GoalMetric {
+  TOTAL_MATCHES
+  REFEREE_MATCHES
+  ASSISTANT_MATCHES
+  FOURTH_MATCHES
+  CUSTOM
+}
+
+enum FeedbackType {
+  BUG
+  SUGGESTION
+  QUESTION
+  OTHER
+}
+
+enum FeedbackStatus {
+  OPEN
+  REVIEWED
+  RESOLVED
+}
+
+model User {
+  id                 String        @id @default(cuid())
+  email              String        @unique
+  passwordHash       String
+  firstName          String
+  lastName           String
+  username           String        @unique
+  role               UserRole      @default(USER)
+  status             AccountStatus @default(ACTIVE)
+  avatarFile         String?
+  region             String?
+  organization       String?
+  classification     String?
+  startYear          Int?
+  /// Lisans / sicil numarası: ÖZEL bilgidir, hiçbir herkese açık yanıtta yer almaz.
+  licenseNumber      String?
+  bio                String?
+  /// Demo verisi ile oluşturulan hesaplar (gerçek kullanıcılarla karışmaması için işaretlenir).
+  isDemo             Boolean       @default(false)
+  closureRequestedAt DateTime?
+  closureReason      String?
+  passwordChangedAt  DateTime      @default(now())
+  lastLoginAt        DateTime?
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
+
+  settings        UserSettings?
+  sessions        Session[]
+  resetTokens     PasswordResetToken[]
+  matches         Match[]
+  teams           Team[]
+  venues          Venue[]
+  seasons         Season[]
+  goals           PersonalGoal[]
+  feedback        Feedback[]
+  activities      ActivityLog[]
+  customCategories Category[]
+}
+
+model UserSettings {
+  id                 String        @id @default(cuid())
+  userId             String        @unique
+  user               User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  profilePublic      Boolean       @default(false)
+  showPhoto          Boolean       @default(true)
+  showBio            Boolean       @default(true)
+  showRegion         Boolean       @default(true)
+  showOrganization   Boolean       @default(false)
+  showStartYear      Boolean       @default(true)
+  showStats          Boolean       @default(true)
+  showCategories     Boolean       @default(true)
+  showSeasons        Boolean       @default(true)
+  showBadges         Boolean       @default(true)
+  dashboardWidgets   String[]      @default(["summary", "recentMatches", "last30", "monthly", "categories", "roles", "cards", "goals", "activity"])
+  defaultRole        OfficialRole?
+  defaultCategoryId  String?
+  defaultCompetition String?
+  updatedAt          DateTime      @updatedAt
+}
+
+model Session {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  /// Çerezdeki rastgele token'ın SHA-256 özeti. Token'ın kendisi saklanmaz.
+  tokenHash  String   @unique
+  userAgent  String?
+  ipAddress  String?
+  createdAt  DateTime @default(now())
+  lastUsedAt DateTime @default(now())
+  expiresAt  DateTime
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId])
+}
+
+/// ownerId boş ise sistem (yönetici) kategorisidir; dolu ise kullanıcının kendi özel kategorisidir.
+model Category {
+  id        String   @id @default(cuid())
+  name      String
+  sortOrder Int      @default(500)
+  isActive  Boolean  @default(true)
+  isSystem  Boolean  @default(false)
+  ownerId   String?
+  owner     User?    @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  matches   Match[]
+
+  @@unique([ownerId, name])
+  @@index([ownerId])
+}
+
+model Season {
+  id        String         @id @default(cuid())
+  userId    String
+  user      User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name      String
+  startDate DateTime       @db.Date
+  endDate   DateTime       @db.Date
+  createdAt DateTime       @default(now())
+  matches   Match[]
+  goals     PersonalGoal[]
+
+  @@unique([userId, name])
+}
+
+model Team {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name        String
+  isFavorite  Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  homeMatches Match[]  @relation("HomeTeam")
+  awayMatches Match[]  @relation("AwayTeam")
+
+  @@unique([userId, name])
+}
+
+model Venue {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name       String
+  city       String?
+  district   String?
+  isFavorite Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  matches    Match[]
+
+  @@unique([userId, name])
+}
+
+model Match {
+  id               String        @id @default(cuid())
+  userId           String
+  user             User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  date             DateTime      @db.Date
+  kickoffTime      String?
+  homeTeamId       String
+  homeTeam         Team          @relation("HomeTeam", fields: [homeTeamId], references: [id], onDelete: Restrict)
+  awayTeamId       String
+  awayTeam         Team          @relation("AwayTeam", fields: [awayTeamId], references: [id], onDelete: Restrict)
+  homeScore        Int?
+  awayScore        Int?
+  halfTimeHome     Int?
+  halfTimeAway     Int?
+  competition      String?
+  categoryId       String
+  category         Category      @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  seasonId         String?
+  season           Season?       @relation(fields: [seasonId], references: [id], onDelete: SetNull)
+  round            String?
+  venueId          String?
+  venue            Venue?        @relation(fields: [venueId], references: [id], onDelete: SetNull)
+  city             String?
+  district         String?
+  matchType        MatchType     @default(LEAGUE)
+  status           MatchStatus   @default(COMPLETED)
+  /// Kullanıcının bu maçtaki TEK ana görevi.
+  role             OfficialRole
+  /// Ana görev dışındaki ek görevler (serbest metin).
+  additionalDuties String?
+  firstHalfAdded   Int?
+  secondHalfAdded  Int?
+  wentToExtraTime  Boolean       @default(false)
+  penaltiesHome    Int?
+  penaltiesAway    Int?
+  reportStatus     ReportStatus  @default(NOT_STARTED)
+  cardEntryMode    CardEntryMode @default(DETAILED)
+  /// Kart toplamları: DETAILED modda kart olaylarından sunucu tarafından hesaplanır,
+  /// SUMMARY modda kullanıcının girdiği özet sayılardır. İstemci bu alanları doğrudan yazamaz.
+  yellowCards      Int           @default(0)
+  secondYellowReds Int           @default(0)
+  directReds       Int           @default(0)
+  redCards         Int           @default(0)
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+
+  cards CardIncident[]
+  notes MatchNote?
+
+  @@index([userId, date])
+  @@index([userId, categoryId])
+  @@index([userId, status])
+  @@index([seasonId])
+}
+
+model CardIncident {
+  id          String     @id @default(cuid())
+  matchId     String
+  match       Match      @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  type        CardType
+  personType  PersonType @default(PLAYER)
+  personName  String?
+  shirtNumber Int?
+  team        TeamSide?
+  minute      Int?
+  addedMinute Int?
+  description String?
+  sortIndex   Int        @default(0)
+
+  @@index([matchId])
+}
+
+/// Maça ait özel notlar. Asla herkese açık profilde gösterilmez.
+model MatchNote {
+  id                  String   @id @default(cuid())
+  matchId             String   @unique
+  match               Match    @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  generalAssessment   String?
+  selfAssessment      String?
+  difficultSituations String?
+  improvementAreas    String?
+  observerEvaluation  String?
+  observerScore       Decimal? @db.Decimal(4, 2)
+  reportNotes         String?
+  substitutionNotes   String?
+  injuryNotes         String?
+  disciplineNotes     String?
+  updatedAt           DateTime @updatedAt
+}
+
+model PersonalGoal {
+  id             String     @id @default(cuid())
+  userId         String
+  user           User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title          String
+  metric         GoalMetric
+  target         Int
+  seasonId       String?
+  season         Season?    @relation(fields: [seasonId], references: [id], onDelete: Cascade)
+  year           Int?
+  manualProgress Int        @default(0)
+  note           String?
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+
+  @@index([userId])
+}
+
+model Feedback {
+  id        String         @id @default(cuid())
+  userId    String?
+  user      User?          @relation(fields: [userId], references: [id], onDelete: SetNull)
+  type      FeedbackType
+  message   String
+  page      String?
+  status    FeedbackStatus @default(OPEN)
+  adminNote String?
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+
+  @@index([status])
+}
+
+/// Kullanıcının kendi işlem geçmişi ("Son aktiviteler"). Hassas veri içermez.
+model ActivityLog {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  action    String
+  summary   String
+  entityId  String?
+  createdAt DateTime @default(now())
+
+  @@index([userId, createdAt])
+}
